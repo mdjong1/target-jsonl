@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 from setuptools import setup
+from setuptools_scm import get_version
 
 with open("README.md", "r", encoding="utf-8") as f:
     readme = f.read()
 
 setup(
     name='target-jsonl',
-    version='0.2.0',
+    version=get_version(),
     description='Singer.io target for writing JSON Line files with S3 support',
     long_description=readme,
     long_description_content_type='text/markdown',
