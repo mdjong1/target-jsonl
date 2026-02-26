@@ -19,7 +19,6 @@ setup(
     install_requires=[
         'jsonschema>=4.23.0',
         'singer-python>=5.12.2',
-        'adjust-precision-for-schema>=0.3.3',
         'obstore>=0.8.0',
     ],
     entry_points='''

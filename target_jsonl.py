@@ -8,7 +8,6 @@ import os
 import simplejson as json
 import singer
 import sys
-from adjust_precision_for_schema import adjust_decimal_precision_for_schema
 from datetime import datetime
 from jsonschema import Draft4Validator, FormatChecker
 from obstore.store import S3Store
@@ -99,7 +98,6 @@ def persist_messages(
         elif message_type == 'SCHEMA':
             stream = o['stream']
             schemas[stream] = o['schema']
-            adjust_decimal_precision_for_schema(schemas[stream])
             validators[stream] = Draft4Validator((o['schema']))
             key_properties[stream] = o['key_properties']
         else:
