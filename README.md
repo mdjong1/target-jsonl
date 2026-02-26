@@ -53,7 +53,7 @@ The data by default will be written to a file called `exchange_rate-{timestamp}.
 
 Here is a brief description of the optional config keys
 
-`destination_path` - Specifies where to write the resulting `.jsonl` file to. By default, the file gets written in your working directory.
+`destination_path` - Specifies where to write the resulting `.jsonl` file to. By default, the file gets written in your working directory. **S3 URIs are supported** (e.g. `s3://my-bucket/some/prefix`) — when an `s3://` path is given, records are buffered in memory per stream and uploaded via [`obstore`](https://github.com/developmentseed/obstore) at the end of the run. AWS credentials are resolved from the standard credential chain (env vars, IAM role, `~/.aws/credentials`, etc.).
 
 `custom_name` - Specifies a custom name for the filename, instead of the stream name (i.e. `{custom_name}-{timestamp}.jsonl`, asumming `do_timestamp_file` is `true`). By default, the stream name will be used.
 

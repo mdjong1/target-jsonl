@@ -6,8 +6,8 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='target-jsonl',
-    version='0.1.4',
-    description='Singer.io target for writing JSON Line files',
+    version='0.2.0',
+    description='Singer.io target for writing JSON Line files with S3 support',
     long_description=readme,
     long_description_content_type='text/markdown',
     author='Andy Huynh',
@@ -16,7 +16,12 @@ setup(
     keywords=["singer", "singer.io", "target", "etl"],
     classifiers=['Programming Language :: Python :: 3 :: Only'],
     py_modules=['target_jsonl'],
-    install_requires=['jsonschema==2.6.0', 'singer-python==5.8.0', 'adjust-precision-for-schema==0.3.3'],
+    install_requires=[
+        'jsonschema>=4.23.0',
+        'singer-python>=5.12.2',
+        'adjust-precision-for-schema>=0.3.3',
+        'obstore>=0.8.0',
+    ],
     entry_points='''
           [console_scripts]
           target-jsonl=target_jsonl:main

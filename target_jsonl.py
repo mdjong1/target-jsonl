@@ -3,17 +3,31 @@
 import argparse
 import io
 import jsonschema
-import simplejson as json
+import obstore as obs
 import os
+import simplejson as json
+import singer
 import sys
+from adjust_precision_for_schema import adjust_decimal_precision_for_schema
 from datetime import datetime
+from jsonschema import Draft4Validator, FormatChecker
+from obstore.store import S3Store
 from pathlib import Path
 
-import singer
-from jsonschema import Draft4Validator, FormatChecker
-from adjust_precision_for_schema import adjust_decimal_precision_for_schema
-
 logger = singer.get_logger()
+
+
+def _is_s3_path(path: str) -> bool:
+    return isinstance(path, str) and path.startswith("s3://")
+
+
+def _parse_s3_uri(path: str):
+    """Return (bucket, key_prefix) from an s3:// URI."""
+    without_scheme = path[5:]  # drop 's3://'
+    slash = without_scheme.find("/")
+    if slash == -1:
+        return without_scheme, ""
+    return without_scheme[:slash], without_scheme[slash + 1:].rstrip("/")
 
 
 def emit_state(state):
@@ -35,6 +49,10 @@ def persist_messages(
     schemas = {}
     key_properties = {}
     validators = {}
+
+    use_s3 = _is_s3_path(destination_path)
+    s3_buffers: dict = {}   # stream -> io.StringIO
+    s3_filenames: dict = {}  # stream -> (bucket, key)
 
     timestamp_file_part = '-' + datetime.now().strftime('%Y%m%dT%H%M%S') if do_timestamp_file else ''
 
@@ -59,12 +77,20 @@ def persist_messages(
                 raise e
 
             filename = (custom_name or o['stream']) + timestamp_file_part + '.jsonl'
-            if destination_path:
-                Path(destination_path).mkdir(parents=True, exist_ok=True)
-            filename = os.path.expanduser(os.path.join(destination_path, filename))
 
-            with open(filename, 'a', encoding='utf-8') as json_file:
-                json_file.write(json.dumps(o['record']) + '\n')
+            if use_s3:
+                if o['stream'] not in s3_buffers:
+                    s3_buffers[o['stream']] = io.StringIO()
+                    bucket, prefix = _parse_s3_uri(destination_path)
+                    key = f"{prefix}/{filename}" if prefix else filename
+                    s3_filenames[o['stream']] = (bucket, key)
+                s3_buffers[o['stream']].write(json.dumps(o['record']) + '\n')
+            else:
+                if destination_path:
+                    Path(destination_path).mkdir(parents=True, exist_ok=True)
+                filepath = os.path.expanduser(os.path.join(destination_path, filename))
+                with open(filepath, 'a', encoding='utf-8') as json_file:
+                    json_file.write(json.dumps(o['record']) + '\n')
 
             state = None
         elif message_type == 'STATE':
@@ -78,6 +104,13 @@ def persist_messages(
             key_properties[stream] = o['key_properties']
         else:
             logger.warning("Unknown message type {} in message {}".format(o['type'], o))
+
+    if use_s3 and s3_buffers:
+        for stream, buf in s3_buffers.items():
+            bucket, key = s3_filenames[stream]
+            store = S3Store(bucket)
+            obs.put(store, key, buf.getvalue().encode("utf-8"))
+            logger.info(f"Wrote s3://{bucket}/{key}")
 
     return state
 
