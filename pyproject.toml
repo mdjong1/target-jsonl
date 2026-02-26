@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "target-jsonl"
+dynamic = ["version"]
+description = "Singer.io target for writing JSON Line files with S3 support"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Andy Huynh", email = "andy.huynh312@gmail.com" }]
+keywords = ["singer", "singer.io", "target", "etl"]
+classifiers = ["Programming Language :: Python :: 3 :: Only"]
+requires-python = ">=3.9"
+dependencies = [
+    "jsonschema>=4.23.0",
+    "singer-python>=5.12.2",
+    "obstore>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/andyh1203/target-jsonl"
+
+[project.scripts]
+target-jsonl = "target_jsonl:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+py-modules = ["target_jsonl"]

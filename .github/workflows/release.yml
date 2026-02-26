@@ -18,15 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install build
-        run: pip install build
+      - uses: astral-sh/setup-uv@v5
 
       - name: Build wheel and sdist
-        run: python -m build
+        run: uv build
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
