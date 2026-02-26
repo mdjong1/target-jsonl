@@ -2,18 +2,18 @@
 
 import argparse
 import io
+import json
 import jsonschema
+import logging
 import obstore as obs
 import os
-import simplejson as json
-import singer
 import sys
 from datetime import datetime
-from jsonschema import Draft4Validator, FormatChecker
+from jsonschema import Draft4Validator
 from obstore.store import S3Store
 from pathlib import Path
 
-logger = singer.get_logger()
+logger = logging.getLogger(__name__)
 
 
 def _is_s3_path(path: str) -> bool:
@@ -57,7 +57,7 @@ def persist_messages(
 
     for message in messages:
         try:
-            o = singer.parse_message(message).asdict()
+            o = json.loads(message)
         except json.decoder.JSONDecodeError:
             logger.error("Unable to parse:\n{}".format(message))
             raise
